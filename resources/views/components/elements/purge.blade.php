@@ -1,0 +1,1 @@
+<div class="sm:max-w-md md:max-w-xl lg:max-w-2xl inline-block w-full align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:w-full"></div>
