@@ -15,7 +15,7 @@ class TrendingController
             $results = [];
 
             for ($i = 1; $i <= 6; $i++) {
-                $page = $connector->send(new TrendingRequest($i));
+                $page = $connector->send(new TrendingRequest('all', 'week', $i));
 
                 if ($page->failed()) {
                     return [];

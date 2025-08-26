@@ -42,6 +42,9 @@ Route::prefix('/@{username}')->group(function () {
     Route::get('/', UserController::class)->name('profile.show');
 });
 
+// Diagnostic route for debugging
+Route::get('/_diagnostic/image-support', [\App\Http\Controllers\DiagnosticController::class, 'imageSupport']);
+
 require __DIR__.'/auth.php';
 
 Route::get('{anything}', function () {

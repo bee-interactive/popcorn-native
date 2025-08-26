@@ -147,12 +147,30 @@ class ImageCacheService
      */
     private function getPlaceholder(string $size): string
     {
-        $placeholderPath = self::CACHE_PATH.'/placeholders/placeholder_'.$size.'.jpg';
-
-        if (! Storage::disk(self::CACHE_DISK)->exists($placeholderPath)) {
-            $this->generatePlaceholder($size, $placeholderPath);
+        // Check for existing placeholder in different formats
+        $basePath = self::CACHE_PATH.'/placeholders/placeholder_'.$size;
+        $extensions = ['.jpg', '.png', '.gif'];
+        
+        foreach ($extensions as $ext) {
+            $placeholderPath = $basePath . $ext;
+            if (Storage::disk(self::CACHE_DISK)->exists($placeholderPath)) {
+                return Storage::disk(self::CACHE_DISK)->path($placeholderPath);
+            }
         }
-
+        
+        // Generate new placeholder if none exists
+        $placeholderPath = $basePath . '.jpg'; // Default to .jpg path
+        $this->generatePlaceholder($size, $placeholderPath);
+        
+        // Check again for any format that was actually created
+        foreach ($extensions as $ext) {
+            $checkPath = $basePath . $ext;
+            if (Storage::disk(self::CACHE_DISK)->exists($checkPath)) {
+                return Storage::disk(self::CACHE_DISK)->path($checkPath);
+            }
+        }
+        
+        // This shouldn't happen, but return the original path as fallback
         return Storage::disk(self::CACHE_DISK)->path($placeholderPath);
     }
 
@@ -162,31 +180,97 @@ class ImageCacheService
     private function generatePlaceholder(string $size, string $path): void
     {
         $dimensions = $this->getDimensions($size);
-
-        // Créer une image grise simple
-        $image = imagecreatetruecolor($dimensions['width'], $dimensions['height']);
-        $gray = imagecolorallocate($image, 200, 200, 200);
-        imagefill($image, 0, 0, $gray);
-
-        // Ajouter du texte
-        $textColor = imagecolorallocate($image, 150, 150, 150);
-        $text = 'No Image';
-        $fontSize = 5;
-        $textWidth = imagefontwidth($fontSize) * strlen($text);
-        $textHeight = imagefontheight($fontSize);
-        $x = ($dimensions['width'] - $textWidth) / 2;
-        $y = ($dimensions['height'] - $textHeight) / 2;
-        imagestring($image, $fontSize, $x, $y, $text, $textColor);
-
-        // Sauvegarder
         $fullPath = Storage::disk(self::CACHE_DISK)->path($path);
         $dir = dirname($fullPath);
+        
         if (! file_exists($dir)) {
             mkdir($dir, 0755, true);
         }
 
-        imagejpeg($image, $fullPath, 90);
-        imagedestroy($image);
+        // Check if GD extension is loaded
+        if (extension_loaded('gd')) {
+            try {
+                // Check which image format functions are available
+                $canUseJpeg = function_exists('imagejpeg');
+                $canUsePng = function_exists('imagepng');
+                $canUseGif = function_exists('imagegif');
+                
+                if (!$canUseJpeg && !$canUsePng && !$canUseGif) {
+                    throw new \Exception('No image output functions available');
+                }
+
+                // Créer une image grise simple
+                $image = \imagecreatetruecolor($dimensions['width'], $dimensions['height']);
+                $gray = \imagecolorallocate($image, 200, 200, 200);
+                \imagefill($image, 0, 0, $gray);
+
+                // Ajouter du texte
+                $textColor = \imagecolorallocate($image, 150, 150, 150);
+                $text = 'No Image';
+                $fontSize = 5;
+                $textWidth = \imagefontwidth($fontSize) * strlen($text);
+                $textHeight = \imagefontheight($fontSize);
+                $x = ($dimensions['width'] - $textWidth) / 2;
+                $y = ($dimensions['height'] - $textHeight) / 2;
+                \imagestring($image, $fontSize, $x, $y, $text, $textColor);
+
+                // Sauvegarder avec le format disponible
+                if ($canUseJpeg) {
+                    \imagejpeg($image, $fullPath, 90);
+                } elseif ($canUsePng) {
+                    // Change extension to PNG if needed
+                    $fullPath = str_replace('.jpg', '.png', $fullPath);
+                    \imagepng($image, $fullPath, 9);
+                } elseif ($canUseGif) {
+                    // Change extension to GIF if needed
+                    $fullPath = str_replace('.jpg', '.gif', $fullPath);
+                    \imagegif($image, $fullPath);
+                }
+                
+                \imagedestroy($image);
+                return;
+            } catch (\Exception $e) {
+                Log::warning('Failed to generate placeholder with GD: ' . $e->getMessage());
+                // Fall through to fallback method
+            }
+        }
+
+        // Fallback: Create an SVG placeholder and save it as a file
+        $svgContent = $this->generateSvgPlaceholder($dimensions['width'], $dimensions['height']);
+        file_put_contents($fullPath, $svgContent);
+    }
+
+    /**
+     * Generate SVG placeholder content
+     */
+    private function generateSvgPlaceholder(int $width, int $height): string
+    {
+        // Create a simple SVG that looks like a JPEG when saved
+        // We'll create a data URI of a 1x1 gray pixel and save it as JPEG data
+        $grayPixel = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAAA//9k=');
+        
+        // Return the gray pixel JPEG data
+        // This is a valid JPEG file that will work as a placeholder
+        return $grayPixel;
+    }
+
+    /**
+     * Get diagnostic info about available image functions
+     */
+    public function getImageSupportInfo(): array
+    {
+        return [
+            'gd_extension' => extension_loaded('gd'),
+            'gd_info' => extension_loaded('gd') ? gd_info() : null,
+            'functions' => [
+                'imagecreatetruecolor' => function_exists('imagecreatetruecolor'),
+                'imagejpeg' => function_exists('imagejpeg'),
+                'imagepng' => function_exists('imagepng'),
+                'imagegif' => function_exists('imagegif'),
+                'imagewbmp' => function_exists('imagewbmp'),
+                'imagewebp' => function_exists('imagewebp'),
+            ],
+        ];
     }
 
     /**

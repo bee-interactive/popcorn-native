@@ -4,13 +4,15 @@ namespace App\Livewire\Search;
 
 use App\Helpers\Popcorn;
 use Flux\Flux;
+use Livewire\Attributes\Validate;
 use LivewireUI\Modal\ModalComponent;
 
 class SaveForLater extends ModalComponent
 {
     public $result;
 
-    public string $wishlist;
+    #[Validate('required|string', message: ['required' => 'Please select a list'])]
+    public string $wishlist = '';
 
     public string $note = '';
 
@@ -21,6 +23,8 @@ class SaveForLater extends ModalComponent
 
     public function save(): void
     {
+        $this->validate();
+        
         $data['data'] = [
             'wishlist_uuid' => $this->wishlist,
             'media_type' => $this->result['media_type'],
@@ -33,15 +37,22 @@ class SaveForLater extends ModalComponent
             'watched' => false,
         ];
 
-        Popcorn::post('items', $data);
+        try {
+            Popcorn::post('items', $data);
+            
+            $this->dispatch('data-updated');
 
-        $this->dispatch('data-updated');
+            Flux::toast(
+                text: __('The item was saved successfully'),
+                variant: 'success',
+            );
 
-        Flux::toast(
-            text: __('The item was saved successfully'),
-            variant: 'success',
-        );
-
-        $this->closeModal();
+            $this->closeModal();
+        } catch (\Exception $e) {
+            Flux::toast(
+                text: __('An error occurred while saving the item'),
+                variant: 'danger',
+            );
+        }
     }
 }

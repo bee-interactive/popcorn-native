@@ -188,5 +188,10 @@
     "Invalid credentials": "Identifiants invalides",
     "Click to set profile picture, jpg, png and max 10MB": "Cliquer pour choisir une image de profil, jpg, png et max 10 Mo",
     "Username must be at least 4 characters, may only contain letters, numbers, and underscores.": "L'identifiant doit comporter au moins 4 caractères, ne peut contenir que des lettres, des chiffres et des underscores.",
-    "Username already taken": "Le nom d'utilisateur est deja pris"
+    "Username already taken": "Le nom d'utilisateur est deja pris",
+    "Please select a list": "Veuillez sélectionner une liste",
+    "Select a list...": "Sélectionner une liste...",
+    "Optional note...": "Note optionnelle...",
+    "Saving...": "Enregistrement...",
+    "An error occurred while saving the item": "Une erreur s'est produite lors de l'enregistrement de l'élément"
 }
