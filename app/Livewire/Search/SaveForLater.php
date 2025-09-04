@@ -24,7 +24,7 @@ class SaveForLater extends ModalComponent
     public function save(): void
     {
         $this->validate();
-        
+
         $data['data'] = [
             'wishlist_uuid' => $this->wishlist,
             'media_type' => $this->result['media_type'],
@@ -39,7 +39,7 @@ class SaveForLater extends ModalComponent
 
         try {
             Popcorn::post('items', $data);
-            
+
             $this->dispatch('data-updated');
 
             Flux::toast(

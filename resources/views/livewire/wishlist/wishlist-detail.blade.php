@@ -1,5 +1,13 @@
 <div>
-    <flux:heading size="xl" level="1">{{ $wishlist->name }}</flux:heading>
+    <flux:heading size="xl" level="1" class="flex justify-between">
+        <div>
+            {{ $wishlist->name }}
+        </div>
+
+        <div>
+            <flux:button size="sm" onclick="Livewire.dispatch('openModal', { component: 'wishlist.update-wishlist', arguments: { uuid: '{{ $wishlist->uuid }}' } })">{{ __('Edit') }}</flux:button>
+        </div>
+    </flux:heading>
 
     <div class="mt-4">
         <x-elements.search-bar :layout="'minimal'" />

@@ -58,6 +58,8 @@ class Login extends Component
 
             cookie()->queue(cookie('locale', $user['data']->language, 120000));
 
+            Popcorn::invalidateUserCache();
+
             return redirect('/dashboard');
         }
 

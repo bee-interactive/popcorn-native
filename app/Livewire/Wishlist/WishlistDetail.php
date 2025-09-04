@@ -24,6 +24,13 @@ class WishlistDetail extends Component
         $this->loadWishlist(false);
     }
 
+    #[On('wishlist-deleted')]
+    public function handleWishlistDeleted(): void
+    {
+        $this->skipRender();
+        $this->js('window.location.href = "'.route('dashboard').'"');
+    }
+
     private function loadWishlist(bool $useCache = true): void
     {
         $response = Popcorn::get('wishlists/'.$this->uuid, null, null, $useCache);

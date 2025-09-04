@@ -142,7 +142,7 @@ describe('MobileCacheService Performance Benchmarks', function () {
         if (env('CI') || env('GITHUB_ACTIONS')) {
             $this->markTestSkipped('Performance benchmarks are skipped in CI environments');
         }
-        
+
         $service = new MobileCacheService;
         $iterations = 100;
 

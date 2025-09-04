@@ -11,7 +11,7 @@ beforeEach(function () {
         'username' => 'testuser',
         'language' => 'en',
     ]]);
-    
+
     // Mock API responses
     $apiUrl = config('services.api.url');
     Http::fake([
@@ -47,7 +47,7 @@ it('requires a wishlist to be selected before saving', function () {
         'poster_path' => '/test.jpg',
         'release_date' => '2024-01-01',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->assertSee('Choose a list and save this entry')
         ->assertSee('Select a list...')
@@ -65,7 +65,7 @@ it('saves item successfully when wishlist is selected', function () {
         'poster_path' => '/test.jpg',
         'release_date' => '2024-01-01',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->set('wishlist', 'uuid-123')
         ->set('note', 'Great movie to watch')
@@ -80,7 +80,7 @@ it('requires wishlist selection to save', function () {
         'title' => 'Test Movie',
         'media_type' => 'movie',
     ];
-    
+
     // Try to save without selecting a wishlist
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->call('save')
@@ -94,7 +94,7 @@ it('shows loading state while saving', function () {
         'title' => 'Test Movie',
         'media_type' => 'movie',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->assertSee('Save')
         ->assertSee('Saving...');
@@ -108,7 +108,7 @@ it('handles TV shows correctly', function () {
         'overview' => 'A test TV show',
         'poster_path' => '/test-tv.jpg',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->assertSee('Save Test TV Show for later')
         ->set('wishlist', 'uuid-456')
@@ -123,7 +123,7 @@ it('handles persons correctly', function () {
         'media_type' => 'person',
         'profile_path' => '/person.jpg', // Persons use 'profile_path' instead of 'poster_path'
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->assertSee('Save Test Person for later')
         ->set('wishlist', 'uuid-123')
@@ -131,14 +131,13 @@ it('handles persons correctly', function () {
         ->assertHasNoErrors();
 });
 
-
 it('validates wishlist as required', function () {
     $result = [
         'id' => 123,
         'title' => 'Test Movie',
         'media_type' => 'movie',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->set('wishlist', '') // Empty string
         ->call('save')
@@ -151,7 +150,7 @@ it('displays error message for required wishlist', function () {
         'title' => 'Test Movie',
         'media_type' => 'movie',
     ];
-    
+
     Livewire::test(SaveForLater::class, ['result' => $result])
         ->call('save')
         ->assertSee('Please select a list');

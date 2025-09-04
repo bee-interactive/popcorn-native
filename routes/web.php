@@ -9,7 +9,9 @@ use App\Http\Controllers\User\UserController;
 use App\Http\Controllers\ViewedItems\ViewedItemsController;
 use App\Http\Middleware\LocaleMiddleware;
 use App\Http\Middleware\RedirectIfAuthenticatedToDashboard;
+use App\Livewire\Settings\Account;
 use App\Livewire\Settings\Appearance;
+use App\Livewire\Settings\Cache;
 use App\Livewire\Settings\Password;
 use App\Livewire\Settings\Profile;
 use App\Livewire\Settings\Tmdb;
@@ -34,8 +36,10 @@ Route::middleware([RedirectIfAuthenticatedToDashboard::class, LocaleMiddleware::
 
     Route::get('settings/profile', Profile::class)->name('settings.profile');
     Route::get('settings/password', Password::class)->name('settings.password');
+    Route::get('settings/account', Account::class)->name('settings.account');
     Route::get('settings/the-movie-database-token', Tmdb::class)->name('settings.tmdb');
     Route::get('settings/appearance', Appearance::class)->name('settings.appearance');
+    Route::get('settings/cache', Cache::class)->name('settings.cache');
 });
 
 Route::prefix('/@{username}')->group(function () {

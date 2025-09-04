@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Actions;
 
+use App\Helpers\Popcorn;
 use Illuminate\Support\Facades\Session;
 
 class Logout
@@ -11,6 +12,8 @@ class Logout
      */
     public function __invoke()
     {
+        Popcorn::invalidateUserCache();
+
         session()->forget('app-access-token');
         session()->forget('app-user');
         cookie()->queue(cookie()->forget('app-access-token'));

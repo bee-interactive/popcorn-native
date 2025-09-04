@@ -224,6 +224,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 ## Comments
 - Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
+- **IMPORTANT**: Never add comments to new code. Write self-documenting code with clear variable names instead.
 
 ## PHPDoc Blocks
 - Add useful array shape type definitions for arrays when appropriate.

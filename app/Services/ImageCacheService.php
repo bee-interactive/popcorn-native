@@ -150,26 +150,26 @@ class ImageCacheService
         // Check for existing placeholder in different formats
         $basePath = self::CACHE_PATH.'/placeholders/placeholder_'.$size;
         $extensions = ['.jpg', '.png', '.gif'];
-        
+
         foreach ($extensions as $ext) {
-            $placeholderPath = $basePath . $ext;
+            $placeholderPath = $basePath.$ext;
             if (Storage::disk(self::CACHE_DISK)->exists($placeholderPath)) {
                 return Storage::disk(self::CACHE_DISK)->path($placeholderPath);
             }
         }
-        
+
         // Generate new placeholder if none exists
-        $placeholderPath = $basePath . '.jpg'; // Default to .jpg path
+        $placeholderPath = $basePath.'.jpg'; // Default to .jpg path
         $this->generatePlaceholder($size, $placeholderPath);
-        
+
         // Check again for any format that was actually created
         foreach ($extensions as $ext) {
-            $checkPath = $basePath . $ext;
+            $checkPath = $basePath.$ext;
             if (Storage::disk(self::CACHE_DISK)->exists($checkPath)) {
                 return Storage::disk(self::CACHE_DISK)->path($checkPath);
             }
         }
-        
+
         // This shouldn't happen, but return the original path as fallback
         return Storage::disk(self::CACHE_DISK)->path($placeholderPath);
     }
@@ -182,7 +182,7 @@ class ImageCacheService
         $dimensions = $this->getDimensions($size);
         $fullPath = Storage::disk(self::CACHE_DISK)->path($path);
         $dir = dirname($fullPath);
-        
+
         if (! file_exists($dir)) {
             mkdir($dir, 0755, true);
         }
@@ -194,8 +194,8 @@ class ImageCacheService
                 $canUseJpeg = function_exists('imagejpeg');
                 $canUsePng = function_exists('imagepng');
                 $canUseGif = function_exists('imagegif');
-                
-                if (!$canUseJpeg && !$canUsePng && !$canUseGif) {
+
+                if (! $canUseJpeg && ! $canUsePng && ! $canUseGif) {
                     throw new \Exception('No image output functions available');
                 }
 
@@ -226,11 +226,12 @@ class ImageCacheService
                     $fullPath = str_replace('.jpg', '.gif', $fullPath);
                     \imagegif($image, $fullPath);
                 }
-                
+
                 \imagedestroy($image);
+
                 return;
             } catch (\Exception $e) {
-                Log::warning('Failed to generate placeholder with GD: ' . $e->getMessage());
+                Log::warning('Failed to generate placeholder with GD: '.$e->getMessage());
                 // Fall through to fallback method
             }
         }
@@ -248,7 +249,7 @@ class ImageCacheService
         // Create a simple SVG that looks like a JPEG when saved
         // We'll create a data URI of a 1x1 gray pixel and save it as JPEG data
         $grayPixel = base64_decode('/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/2wBDAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQH/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCwAAA//9k=');
-        
+
         // Return the gray pixel JPEG data
         // This is a valid JPEG file that will work as a placeholder
         return $grayPixel;

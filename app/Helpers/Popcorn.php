@@ -242,7 +242,21 @@ class Popcorn
         if (str_contains($url, 'wishlists')) {
             cache()->forget('popcorn.get.'.md5($apiUrl.'wishlists'.serialize(null)));
             cache()->forget('popcorn.get.'.md5($apiUrl.'/wishlists'.serialize(null)));
+
+            $wishlistId = self::extractIdFromUrl($url, 'wishlists');
+            if ($wishlistId !== null && $wishlistId !== '' && $wishlistId !== '0') {
+                cache()->forget('popcorn.get.'.md5($apiUrl."wishlists/{$wishlistId}".serialize(null)));
+                cache()->forget('popcorn.get.'.md5($apiUrl."wishlists/{$wishlistId}/items".serialize(null)));
+            }
+
+            cache()->forget('popcorn.get.'.md5($apiUrl.'items'.serialize(null)));
+            cache()->forget('popcorn.get.'.md5($apiUrl.'/items'.serialize(null)));
+            cache()->forget('popcorn.get.'.md5($apiUrl.'trending'.serialize(null)));
+            cache()->forget('popcorn.get.'.md5($apiUrl.'/trending'.serialize(null)));
+
             $cacheService->invalidatePattern('popcorn.get.*wishlists*');
+            $cacheService->invalidatePattern('popcorn.get.*items*');
+            $cacheService->invalidatePattern('popcorn.get.*trending*');
         } elseif (str_contains($url, 'items')) {
             cache()->forget('popcorn.get.'.md5($apiUrl.'items'.serialize(null)));
             cache()->forget('popcorn.get.'.md5($apiUrl.'/items'.serialize(null)));
@@ -264,6 +278,18 @@ class Popcorn
                 }
             }
         }
+    }
+
+    /**
+     * Invalider tout le cache de l'utilisateur lors de la connexion/déconnexion
+     */
+    public static function invalidateUserCache(): void
+    {
+        $cacheService = self::getCacheService();
+
+        $cacheService->invalidatePattern('popcorn.get.*');
+
+        cache()->flush();
     }
 
     /**
