@@ -44,19 +44,27 @@ class Login extends Component
 
             $user = Popcorn::post('users/me', $token);
 
+            if (! $user->has('data')) {
+                session()->forget('app-access-token');
+
+                return redirect('/login')->with('error', __('Could not load user profile. Please try again.'));
+            }
+
+            $data = $user->get('data');
+
             session(['app-user' => [
-                'uuid' => $user['data']->uuid,
-                'name' => $user['data']->name,
-                'username' => $user['data']->username,
-                'description' => $user['data']->description,
-                'language' => $user['data']->language,
-                'email' => $user['data']->email,
-                'public_profile' => $user['data']->public_profile,
-                'tmdb_token' => $user['data']->tmdb_token,
-                'profile_picture' => $user['data']->profile_picture,
+                'uuid' => $data->uuid,
+                'name' => $data->name,
+                'username' => $data->username,
+                'description' => $data->description,
+                'language' => $data->language,
+                'email' => $data->email,
+                'public_profile' => $data->public_profile,
+                'tmdb_token' => $data->tmdb_token,
+                'profile_picture' => $data->profile_picture,
             ]]);
 
-            cookie()->queue(cookie('locale', $user['data']->language, 120000));
+            cookie()->queue(cookie('locale', $data->language, 120000));
 
             Popcorn::invalidateUserCache();
 

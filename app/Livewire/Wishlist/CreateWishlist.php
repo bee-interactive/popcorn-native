@@ -26,10 +26,19 @@ class CreateWishlist extends ModalComponent
 
         $wishlist = Popcorn::post('wishlists', $data);
 
+        if (! $wishlist->has('data')) {
+            Flux::toast(
+                text: __('An error occurred. Please try again.'),
+                variant: 'error',
+            );
+
+            return;
+        }
+
         $this->name = '';
         $this->is_favorite = false;
 
-        $this->dispatch('data-updated', $wishlist['data']);
+        $this->dispatch('data-updated', $wishlist->get('data'));
 
         Flux::toast(
             text: __('Wishlist created successfully'),

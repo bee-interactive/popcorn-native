@@ -10,7 +10,7 @@ class Profile extends Component
 {
     public string $uuid;
 
-    public string $tmdb_token;
+    public ?string $tmdb_token;
 
     public string $name = '';
 
@@ -67,19 +67,30 @@ class Profile extends Component
         try {
             $user = Popcorn::patch('users/'.$this->uuid, ['data' => $datas]);
 
+            if (! $user->has('data')) {
+                Flux::toast(
+                    text: __('Something went wrong. Please try again'),
+                    variant: 'error',
+                );
+
+                return;
+            }
+
+            $data = $user->get('data');
+
             session(['app-user' => [
                 'uuid' => $this->uuid,
-                'name' => $user['data']->name,
-                'username' => $user['data']->username,
-                'description' => $user['data']->description,
-                'language' => $user['data']->language,
-                'email' => $user['data']->email,
+                'name' => $data->name,
+                'username' => $data->username,
+                'description' => $data->description,
+                'language' => $data->language,
+                'email' => $data->email,
                 'tmdb_token' => $this->tmdb_token,
                 'public_profile' => $this->public_profile,
-                'profile_picture' => $user['data']->profile_picture,
+                'profile_picture' => $data->profile_picture,
             ]]);
 
-            cookie()->queue(cookie('locale', $user['data']->language, 120000));
+            cookie()->queue(cookie('locale', $data->language, 120000));
         } catch (\Exception) {
             Flux::toast(
                 text: __('Something went wrong. Please try again'),

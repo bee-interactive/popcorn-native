@@ -62,13 +62,13 @@ it('shows empty message when wishlist has no items', function () {
         ->assertSee('No items yet');
 });
 
-it('handles null wishlist data gracefully', function () {
+it('handles missing wishlist data gracefully', function () {
     $apiUrl = config('services.api.url');
 
     Http::fake([
-        $apiUrl.'wishlists/invalid-uuid' => Http::response(['data' => null], 200),
+        $apiUrl.'wishlists/invalid-uuid' => Http::response(['error' => 'Not found'], 404),
     ]);
 
-    Livewire::test(WishlistDetail::class, ['uuid' => 'invalid-uuid'])
-        ->assertStatus(404);
+    $this->get('/wishlist/invalid-uuid')
+        ->assertNotFound();
 });

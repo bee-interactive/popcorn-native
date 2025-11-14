@@ -89,16 +89,27 @@ class CropImage extends ModalComponent
             ]
         );
 
+        if (! $user->has('data')) {
+            Flux::toast(
+                text: __('An error occurred. Please try again.'),
+                variant: 'error',
+            );
+
+            return;
+        }
+
+        $data = $user->get('data');
+
         session(['app-user' => [
             'uuid' => $this->uuid,
-            'name' => $user['data']->name,
-            'username' => $user['data']->username,
-            'description' => $user['data']->description,
-            'language' => $user['data']->language,
-            'email' => $user['data']->email,
+            'name' => $data->name,
+            'username' => $data->username,
+            'description' => $data->description,
+            'language' => $data->language,
+            'email' => $data->email,
             'tmdb_token' => $this->tmdb_token,
             'public_profile' => $this->public_profile,
-            'profile_picture' => $user['data']->profile_picture,
+            'profile_picture' => $data->profile_picture,
         ]]);
 
         $this->dispatch('data-updated');

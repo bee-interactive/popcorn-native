@@ -70,23 +70,46 @@ class Register extends Component
 
         if ($loginResponse->successful()) {
             $token = $loginResponse->json('success.token');
+
+            if (! $token) {
+                $this->message = __('Login failed. No token received.');
+
+                return redirect('/login');
+            }
+
             session(['app-access-token' => $token]);
 
-            $user = Popcorn::post('users/me', $token);
+            try {
+                $user = Popcorn::get('users/me');
 
-            session(['app-user' => [
-                'uuid' => $user['data']->uuid,
-                'name' => $user['data']->name,
-                'username' => $user['data']->username,
-                'description' => $user['data']->description,
-                'language' => $user['data']->language,
-                'email' => $user['data']->email,
-                'public_profile' => $user['data']->public_profile,
-                'tmdb_token' => $user['data']->tmdb_token,
-                'profile_picture' => $user['data']->profile_picture,
-            ]]);
+                if (! $user->has('data')) {
+                    session()->forget('app-access-token');
+                    $this->message = __('Registration succeeded but could not load profile. Please login.');
 
-            return redirect('/');
+                    return redirect('/login');
+                }
+
+                $data = $user->get('data');
+
+                session(['app-user' => [
+                    'uuid' => $data->uuid,
+                    'name' => $data->name,
+                    'username' => $data->username,
+                    'description' => $data->description,
+                    'language' => $data->language,
+                    'email' => $data->email,
+                    'public_profile' => $data->public_profile,
+                    'tmdb_token' => $data->tmdb_token,
+                    'profile_picture' => $data->profile_picture,
+                ]]);
+
+                return redirect('/');
+            } catch (\Exception $e) {
+                session()->forget('app-access-token');
+                $this->message = __('Registration succeeded. Please login.');
+
+                return redirect('/login');
+            }
         }
 
         $this->message = __('Account created but login failed. Please try logging in manually.');

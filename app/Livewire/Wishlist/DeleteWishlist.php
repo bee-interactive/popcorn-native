@@ -18,7 +18,12 @@ class DeleteWishlist extends ModalComponent
         $this->uuid = $uuid;
 
         $response = Popcorn::get('wishlists/'.$uuid);
-        $wishlist = $response['data'] ?? abort(404);
+
+        if (! $response->has('data')) {
+            abort(404);
+        }
+
+        $wishlist = $response->get('data');
 
         $this->name = $wishlist->name;
     }

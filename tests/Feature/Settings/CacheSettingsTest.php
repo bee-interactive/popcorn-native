@@ -116,9 +116,9 @@ it('cache tab appears in settings navigation order', function () {
 
     $content = $response->getContent();
 
-    expect($content)->toContain('settings.profile');
-    expect($content)->toContain('settings.password');
-    expect($content)->toContain('settings.tmdb');
-    expect($content)->toContain('settings.appearance');
-    expect($content)->toContain('settings.cache');
+    expect($content)->toContain('settings/profile');
+    expect($content)->toContain('settings/password');
+    expect($content)->toContain('settings/the-movie-database-token');
+    expect($content)->toContain('settings/appearance');
+    expect($content)->toContain('settings/cache');
 });

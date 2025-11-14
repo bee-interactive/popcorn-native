@@ -20,7 +20,7 @@ class Popcorn
         return self::$cacheService;
     }
 
-    private static function getToken(): ?string
+    private static function getToken(): string
     {
         // Priorité : session > secure storage
         if (session('app-access-token')) {
@@ -28,7 +28,16 @@ class Popcorn
         }
 
         // Fallback sur le stockage sécurisé natif
-        return self::getCacheService()->getSecureToken('api_token');
+        $token = self::getCacheService()->getSecureToken('api_token');
+
+        if (! $token) {
+            throw new \RuntimeException(
+                'No API token found. User must be authenticated. '.
+                'Please ensure the user is logged in before making API requests.'
+            );
+        }
+
+        return $token;
     }
 
     public static function get(string $url = '', $token = null, $params = null, $useCache = true)
@@ -84,13 +93,21 @@ class Popcorn
         $fullUrl = config('services.api.url').$url;
 
         if ($queueSync && ! self::isOnline()) {
-            self::queueForSync('POST', $url, $params);
+            try {
+                self::queueForSync('POST', $url, $params);
 
-            return collect([
-                'success' => true,
-                'queued' => true,
-                'message' => 'Will sync when online',
-            ]);
+                return collect([
+                    'success' => true,
+                    'queued' => true,
+                    'message' => 'Will sync when online',
+                ]);
+            } catch (\RuntimeException $e) {
+                return collect([
+                    'success' => false,
+                    'queued' => false,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         try {
@@ -109,9 +126,17 @@ class Popcorn
             return collect($data);
         } catch (\Exception $e) {
             if ($queueSync) {
-                self::queueForSync('POST', $url, $params);
+                try {
+                    self::queueForSync('POST', $url, $params);
 
-                return collect(['success' => false, 'queued' => true]);
+                    return collect(['success' => false, 'queued' => true]);
+                } catch (\RuntimeException $queueException) {
+                    return collect([
+                        'success' => false,
+                        'queued' => false,
+                        'error' => $queueException->getMessage(),
+                    ]);
+                }
             }
 
             return collect(['error' => $e->getMessage()]);
@@ -124,9 +149,17 @@ class Popcorn
         $fullUrl = config('services.api.url').$url;
 
         if ($queueSync && ! self::isOnline()) {
-            self::queueForSync('PATCH', $url, $params);
+            try {
+                self::queueForSync('PATCH', $url, $params);
 
-            return collect(['success' => true, 'queued' => true]);
+                return collect(['success' => true, 'queued' => true]);
+            } catch (\RuntimeException $e) {
+                return collect([
+                    'success' => false,
+                    'queued' => false,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         try {
@@ -145,9 +178,17 @@ class Popcorn
             return collect($data);
         } catch (\Exception $e) {
             if ($queueSync) {
-                self::queueForSync('PATCH', $url, $params);
+                try {
+                    self::queueForSync('PATCH', $url, $params);
 
-                return collect(['success' => false, 'queued' => true]);
+                    return collect(['success' => false, 'queued' => true]);
+                } catch (\RuntimeException $queueException) {
+                    return collect([
+                        'success' => false,
+                        'queued' => false,
+                        'error' => $queueException->getMessage(),
+                    ]);
+                }
             }
 
             return collect(['error' => $e->getMessage()]);
@@ -160,9 +201,17 @@ class Popcorn
         $fullUrl = config('services.api.url').$url;
 
         if ($queueSync && ! self::isOnline()) {
-            self::queueForSync('DELETE', $url, $params);
+            try {
+                self::queueForSync('DELETE', $url, $params);
 
-            return collect(['success' => true, 'queued' => true]);
+                return collect(['success' => true, 'queued' => true]);
+            } catch (\RuntimeException $e) {
+                return collect([
+                    'success' => false,
+                    'queued' => false,
+                    'error' => $e->getMessage(),
+                ]);
+            }
         }
 
         try {
@@ -181,9 +230,17 @@ class Popcorn
             return collect($data);
         } catch (\Exception $e) {
             if ($queueSync) {
-                self::queueForSync('DELETE', $url, $params);
+                try {
+                    self::queueForSync('DELETE', $url, $params);
 
-                return collect(['success' => false, 'queued' => true]);
+                    return collect(['success' => false, 'queued' => true]);
+                } catch (\RuntimeException $queueException) {
+                    return collect([
+                        'success' => false,
+                        'queued' => false,
+                        'error' => $queueException->getMessage(),
+                    ]);
+                }
             }
 
             return collect(['error' => $e->getMessage()]);
@@ -193,6 +250,9 @@ class Popcorn
     public static function postWithFile(string $url, $fileFieldName, $file, $fileName = null, $extraParams = [])
     {
         $token = self::getToken();
+
+        // Validation de sécurité
+        self::validateUploadedFile($file);
 
         $fileContents = is_string($file)
             ? file_get_contents($file)
@@ -208,6 +268,86 @@ class Popcorn
         $data = json_decode($response->body());
 
         return collect($data);
+    }
+
+    /**
+     * Validate uploaded file for security
+     *
+     * @throws \InvalidArgumentException
+     */
+    private static function validateUploadedFile($file): void
+    {
+        // Taille maximale: 5MB
+        $maxSize = 5 * 1024 * 1024;
+
+        // Types MIME autorisés (images uniquement)
+        $allowedMimes = [
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/gif',
+            'image/webp',
+        ];
+
+        // Extensions autorisées
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        // Vérification de la taille
+        if (is_object($file) && method_exists($file, 'getSize')) {
+            $fileSize = $file->getSize();
+
+            if ($fileSize > $maxSize) {
+                throw new \InvalidArgumentException(
+                    "File size ({$fileSize} bytes) exceeds maximum allowed size ({$maxSize} bytes / 5MB)."
+                );
+            }
+        } elseif (is_string($file) && file_exists($file)) {
+            $fileSize = filesize($file);
+
+            if ($fileSize > $maxSize) {
+                throw new \InvalidArgumentException(
+                    "File size ({$fileSize} bytes) exceeds maximum allowed size ({$maxSize} bytes / 5MB)."
+                );
+            }
+        }
+
+        // Vérification du type MIME
+        if (is_object($file) && method_exists($file, 'getMimeType')) {
+            $mimeType = $file->getMimeType();
+
+            if (! in_array($mimeType, $allowedMimes)) {
+                throw new \InvalidArgumentException(
+                    "File type '{$mimeType}' is not allowed. Allowed types: ".implode(', ', $allowedMimes)
+                );
+            }
+        } elseif (is_string($file) && file_exists($file)) {
+            $mimeType = mime_content_type($file);
+
+            if (! in_array($mimeType, $allowedMimes)) {
+                throw new \InvalidArgumentException(
+                    "File type '{$mimeType}' is not allowed. Allowed types: ".implode(', ', $allowedMimes)
+                );
+            }
+        }
+
+        // Vérification de l'extension
+        if (is_object($file) && method_exists($file, 'getClientOriginalExtension')) {
+            $extension = strtolower($file->getClientOriginalExtension());
+
+            if (! in_array($extension, $allowedExtensions)) {
+                throw new \InvalidArgumentException(
+                    "File extension '{$extension}' is not allowed. Allowed extensions: ".implode(', ', $allowedExtensions)
+                );
+            }
+        } elseif (is_string($file)) {
+            $extension = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+
+            if (! in_array($extension, $allowedExtensions)) {
+                throw new \InvalidArgumentException(
+                    "File extension '{$extension}' is not allowed. Allowed extensions: ".implode(', ', $allowedExtensions)
+                );
+            }
+        }
     }
 
     /**
@@ -294,9 +434,31 @@ class Popcorn
 
     /**
      * Ajouter une action à la file de synchronisation
+     *
+     * @throws \RuntimeException
      */
     private static function queueForSync(string $method, string $url, ?array $params): void
     {
+        $maxQueueSize = 1000;
+
+        $pendingCount = DB::table('sync_queue')
+            ->where('status', 'pending')
+            ->count();
+
+        if ($pendingCount >= $maxQueueSize) {
+            Log::warning('Sync queue limit reached', [
+                'current_count' => $pendingCount,
+                'max_size' => $maxQueueSize,
+                'attempted_method' => $method,
+                'attempted_url' => $url,
+            ]);
+
+            throw new \RuntimeException(
+                "Sync queue has reached its maximum size ({$maxQueueSize} items). ".
+                'Please sync pending items before adding more.'
+            );
+        }
+
         DB::table('sync_queue')->insert([
             'type' => strtolower($method).'_request',
             'payload' => json_encode([
@@ -308,6 +470,14 @@ class Popcorn
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        if ($pendingCount > ($maxQueueSize * 0.8)) {
+            Log::warning('Sync queue is approaching limit', [
+                'current_count' => $pendingCount + 1,
+                'max_size' => $maxQueueSize,
+                'percentage' => round((($pendingCount + 1) / $maxQueueSize) * 100, 2),
+            ]);
+        }
     }
 
     /**

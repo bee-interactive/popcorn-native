@@ -34,7 +34,12 @@ class WishlistDetail extends Component
     private function loadWishlist(bool $useCache = true): void
     {
         $response = Popcorn::get('wishlists/'.$this->uuid, null, null, $useCache);
-        $this->wishlist = $response['data'] ?? abort(404);
+
+        if (! $response->has('data')) {
+            abort(404);
+        }
+
+        $this->wishlist = $response->get('data');
     }
 
     public function render()

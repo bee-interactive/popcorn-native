@@ -33,22 +33,30 @@ class Tmdb extends Component
             throw $e;
         }
 
-        $user = Popcorn::post('users/tmdb-token', [
+        Popcorn::post('users/tmdb-token', [
             'tmdb_token' => $validated['token'],
         ]);
 
         $user = Popcorn::post('users/me');
 
+        if (! $user->has('data')) {
+            throw ValidationException::withMessages([
+                'token' => __('Could not verify token. Please try again.'),
+            ]);
+        }
+
+        $data = $user->get('data');
+
         session(['app-user' => [
-            'uuid' => $user['data']->uuid,
-            'name' => $user['data']->name,
-            'username' => $user['data']->username,
-            'description' => $user['data']->description,
-            'language' => $user['data']->language,
-            'email' => $user['data']->email,
-            'public_profile' => $user['data']->public_profile,
-            'tmdb_token' => $user['data']->tmdb_token,
-            'profile_picture' => $user['data']->profile_picture,
+            'uuid' => $data->uuid,
+            'name' => $data->name,
+            'username' => $data->username,
+            'description' => $data->description,
+            'language' => $data->language,
+            'email' => $data->email,
+            'public_profile' => $data->public_profile,
+            'tmdb_token' => $data->tmdb_token,
+            'profile_picture' => $data->profile_picture,
         ]]);
 
         $this->dispatch('token-updated');

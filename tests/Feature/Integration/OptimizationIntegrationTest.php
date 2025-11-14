@@ -54,6 +54,9 @@ beforeEach(function () {
     Cache::flush();
 
     config(['services.api.url' => 'https://api.example.com']);
+
+    // Configurer un token de test en session
+    session(['app-access-token' => 'test-integration-token']);
 });
 
 describe('Full Optimization Stack Integration', function () {

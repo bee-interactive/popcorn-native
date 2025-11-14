@@ -32,13 +32,19 @@ class MarkItemAsViewed extends ModalComponent
 
         $this->item = Popcorn::get('items/'.$uuid);
 
-        $this->name = $this->item['data']->name;
-        $this->media_type = $this->item['data']->media_type;
-        $this->synopsis = $this->item['data']->synopsis;
-        $this->backdrop_path = $this->item['data']->backdrop_path;
-        $this->poster_path = $this->item['data']->poster_path;
-        $this->release_date = $this->item['data']->release_date;
-        $this->note = $this->item['data']->note;
+        if (! $this->item->has('data')) {
+            abort(404, 'Item not found');
+        }
+
+        $data = $this->item->get('data');
+
+        $this->name = $data->name;
+        $this->media_type = $data->media_type;
+        $this->synopsis = $data->synopsis;
+        $this->backdrop_path = $data->backdrop_path;
+        $this->poster_path = $data->poster_path;
+        $this->release_date = $data->release_date;
+        $this->note = $data->note;
     }
 
     public function save(): void

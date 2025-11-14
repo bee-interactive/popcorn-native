@@ -55,13 +55,13 @@ it('account tab appears after password in navigation', function () {
 
     $content = $response->getContent();
 
-    expect($content)->toContain('settings.profile');
-    expect($content)->toContain('settings.password');
-    expect($content)->toContain('settings.account');
+    expect($content)->toContain('settings/profile');
+    expect($content)->toContain('settings/password');
+    expect($content)->toContain('settings/account');
 
-    $passwordPosition = strpos($content, 'settings.password');
-    $accountPosition = strpos($content, 'settings.account');
-    $tmdbPosition = strpos($content, 'settings.tmdb');
+    $passwordPosition = strpos($content, 'settings/password');
+    $accountPosition = strpos($content, 'settings/account');
+    $tmdbPosition = strpos($content, 'settings/the-movie-database-token');
 
     expect($accountPosition)->toBeGreaterThan($passwordPosition);
     expect($tmdbPosition)->toBeGreaterThan($accountPosition);

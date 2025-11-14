@@ -39,7 +39,16 @@ class UpdateWishlist extends ModalComponent
 
         $wishlist = Popcorn::patch('wishlists/'.$this->uuid, $data);
 
-        $this->dispatch('data-updated', $wishlist['data']);
+        if (! $wishlist->has('data')) {
+            Flux::toast(
+                text: __('An error occurred. Please try again.'),
+                variant: 'error',
+            );
+
+            return;
+        }
+
+        $this->dispatch('data-updated', $wishlist->get('data'));
 
         Flux::toast(
             text: __('Wishlist updated successfully'),

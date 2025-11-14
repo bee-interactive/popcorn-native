@@ -29,6 +29,9 @@ beforeEach(function () {
 
     // Configurer l'API
     config(['services.api.url' => 'https://api.example.com']);
+
+    // Configurer un token de test en session
+    session(['app-access-token' => 'test-job-token']);
 });
 
 describe('ProcessSyncQueueJob', function () {

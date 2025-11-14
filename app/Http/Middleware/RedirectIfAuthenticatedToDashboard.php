@@ -15,7 +15,7 @@ class RedirectIfAuthenticatedToDashboard
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (session()->has('app-access-token') || request()->cookie('app-access-token')) {
+        if (session('app-access-token') || $request->cookie('app-access-token')) {
             return $next($request);
         }
 
