@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6e2a030b9c4e645a183d39c36e723ee5",
+    "content-hash": "302a79c89e98bcc131e092d9274cde2a",
     "packages": [
         {
             "name": "brick/math",
@@ -2552,12 +2552,12 @@
         },
         {
             "name": "nativephp/mobile",
-            "version": "1.13.0",
+            "version": "2.2.0",
             "dist": {
                 "type": "zip",
-                "url": "https://nativephp.composer.sh/download/a037a352-8208-4b7a-913d-e56be0253845/nativephp-1.13.0.zip",
-                "reference": "0d8732ea745b370502ae5981fd16aeb262fe467c",
-                "shasum": "b1f46c7f15e645df703bfff9293ea8adee9059d8"
+                "url": "https://nativephp.composer.sh/download/a094373b-a384-4731-84e3-9f9a2d18750f/nativephp-2.2.0.zip",
+                "reference": "0d2c9976f2b049d9cb6e3095156ebb45afa512b6",
+                "shasum": "3a8dc51d51957d684f19172d611ee6b6301e9aed"
             },
             "require": {
                 "ext-dom": "*",
@@ -2628,18 +2628,13 @@
             "authors": [
                 {
                     "name": "Simon Hamp",
-                    "role": "Developer",
+                    "role": "Co-founder",
                     "email": "simon@nativephp.com"
                 },
                 {
                     "name": "Shane Rosenthal",
-                    "role": "Developer",
+                    "role": "Co-founder",
                     "email": "shane@nativephp.com"
-                },
-                {
-                    "name": "Marcel Pociot",
-                    "role": "Developer",
-                    "email": "marcel@beyondco.de"
                 }
             ],
             "description": "NativePHP for Mobile",
@@ -2650,7 +2645,7 @@
                 "laravel",
                 "nativephp"
             ],
-            "time": "2025-10-27T23:37:18+00:00"
+            "time": "2025-12-13T00:07:04+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -11499,5 +11494,5 @@
         "php": "^8.2"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }

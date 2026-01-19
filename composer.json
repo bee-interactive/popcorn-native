@@ -15,7 +15,7 @@
         "livewire/flux": "^2.1.1",
         "livewire/flux-pro": "^2.1",
         "livewire/volt": "^1.7.0",
-        "nativephp/mobile": "^1.1",
+        "nativephp/mobile": "^2.2",
         "pinkary-project/type-guard": "^0.1.0",
         "saloonphp/laravel-plugin": "^3.5",
         "saloonphp/saloon": "^3.11",
